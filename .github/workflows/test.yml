@@ -83,7 +83,14 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: choco install ninja meson
+        run: choco install ninja meson winflexbison3
+
+      - name: Set PATH
+        shell: cmd
+        run: |
+          call refreshenv
+          chcp 65001
+          echo PATH=%PATH% > %GITHUB_ENV%
 
       - name: Enable Visual Studio environment
         uses: ilammy/msvc-dev-cmd@v1

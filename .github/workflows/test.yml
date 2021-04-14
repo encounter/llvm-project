@@ -1,0 +1,109 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build-linux:
+    name: Build Linux (${{matrix.name}} x86_64)
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC
+            cc: gcc
+            cxx: g++
+            ld: gold
+          - name: Clang
+            cc: clang
+            cxx: clang++
+            ld: lld
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install curl git cmake ninja-build meson clang lld python3 python3-mako python-is-python3
+
+      - name: Configure CMake
+        run: |
+          cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install" \
+            -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}} \
+            -DLLVM_USE_LINKER=${{matrix.ld}}
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo --target install-distribution
+
+      - name: Create tarball
+        run: tar -C install -cvf uam.tar.gz --xform 's:^\./::' .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: hsh-linux-${{matrix.cc}}-x86_64
+          path: uam.tar.gz
+
+  build-macos:
+    name: Build macOS (AppleClang x86_64)
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install ninja meson
+          python3 -m pip install Mako
+
+      - name: Configure CMake
+        run: |
+          cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install"
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo --target install-distribution
+
+      - name: Create tarball
+        run: tar -C install -cvf uam.tar.gz -s '/.//' .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: hsh-macos-appleclang-x86_64
+          path: uam.tar.gz
+
+  build-windows-msvc:
+    name: Build Windows (MSVC x86_64)
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: choco install ninja meson
+
+      - name: Enable Visual Studio environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Python dependencies
+        run: python -m pip install Mako
+
+      - name: Configure CMake
+        run: |
+          cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+            -DCMAKE_INSTALL_PREFIX:PATH="$env:GITHUB_WORKSPACE\install"
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo --target install-distribution
+
+      - name: Create 7z
+        run: 7z a -t7z uam.7z .\install\*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: hsh-macos-appleclang-x86_64
+          path: uam.7z

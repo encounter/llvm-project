@@ -83,20 +83,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: choco install ninja meson winflexbison3
-
-      - name: Set PATH
-        shell: cmd
         run: |
-          call refreshenv
-          chcp 65001
-          echo PATH=%PATH% > %GITHUB_ENV%
+          choco install ninja meson winflexbison3
+          echo "$env:ProgramFiles\Meson" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          python -m pip install Mako
 
       - name: Enable Visual Studio environment
         uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install Python dependencies
-        run: python -m pip install Mako
 
       - name: Configure CMake
         run: |

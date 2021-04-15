@@ -107,6 +107,7 @@ if(APPLE)
   list(TRANSFORM archs PREPEND "-arch ")
   list(JOIN archs " " archs_join)
   list(APPEND MESON_OPTIONS "-Dc_args=${archs_join}" "-Dcpp_args=${archs_join}")
+  set(MESON env SDKROOT=${CMAKE_OSX_SYSROOT} "${MESON}")
 endif()
 
 if(CMAKE_CROSSCOMPILING)

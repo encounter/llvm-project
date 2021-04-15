@@ -107,7 +107,7 @@ if(APPLE)
   list(TRANSFORM archs PREPEND "-arch ")
   list(JOIN archs " " archs_join)
   list(APPEND MESON_OPTIONS "-Dc_args=${archs_join}" "-Dcpp_args=${archs_join}")
-  set(MESON env "SDKROOT=${CMAKE_OSX_SYSROOT}" "${MESON}")
+  set(MESON_ENV env "SDKROOT=${CMAKE_OSX_SYSROOT}")
 endif()
 
 if(CMAKE_CROSSCOMPILING)
@@ -139,8 +139,7 @@ else()
     get_filename_component(cpp_compiler "${CMAKE_CXX_COMPILER}" NAME)
     set(COMPILERS "c = '${c_compiler}'
 cpp = '${cpp_compiler}'")
-    # don't set compiler on macOS, rely on SDKROOT
-  elseif(NOT APPLE)
+  else()
     set(COMPILERS "c = '${CMAKE_C_COMPILER}'
 cpp = '${CMAKE_CXX_COMPILER}'")
   endif()
@@ -167,8 +166,8 @@ ExternalProject_Add(
         GIT_TAG v1.1.0
         PATCH_COMMAND "${GIT_EXECUTABLE}" reset --hard HEAD
         COMMAND "${GIT_EXECUTABLE}" apply "${CMAKE_CURRENT_SOURCE_DIR}/uam.patch"
-        CONFIGURE_COMMAND "${MESON}" "<SOURCE_DIR>" ${MESON_OPTIONS}
-        BUILD_COMMAND "${NINJA}"
+        CONFIGURE_COMMAND ${MESON_ENV} "${MESON}" "<SOURCE_DIR>" ${MESON_OPTIONS}
+        BUILD_COMMAND ${MESON_ENV} "${NINJA}"
         INSTALL_COMMAND "")
 
 ExternalProject_Get_Property(UAM SOURCE_DIR BINARY_DIR)

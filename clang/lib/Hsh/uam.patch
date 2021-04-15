@@ -100,7 +100,7 @@ index d6d5da7..7a5be48 100644
  
  #define delete_Instruction(p, insn) (p)->releaseInstruction(insn)
 diff --git a/meson.build b/meson.build
-index 1486cbc..4ddee37 100644
+index 1486cbc..06bdc3b 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -4,7 +4,7 @@ project('uam', ['c', 'cpp'],
@@ -112,7 +112,7 @@ index 1486cbc..4ddee37 100644
  has_mako = run_command(
  	prog_python, '-c',
  	'''
-@@ -19,13 +19,24 @@ endif
+@@ -19,13 +19,28 @@ endif
  compiler_c = meson.get_compiler('c')
  compiler_cpp = meson.get_compiler('cpp')
  
@@ -122,12 +122,16 @@ index 1486cbc..4ddee37 100644
 +    # search for homebrew-installed versions on macOS
 +    '/opt/homebrew/opt/bison/bin/bison',
 +    '/usr/local/opt/bison/bin/bison',
++    # from winflexbison
++    'win_bison.exe',
 +    'bison'
 +], native: true)
 +prog_flex = find_program([
 +    # search for homebrew-installed versions on macOS
 +    '/opt/homebrew/opt/flex/bin/flex',
 +    '/usr/local/opt/flex/bin/flex',
++    # from winflexbison
++    'win_flex.exe',
 +    'flex'
 +], native: true)
  
@@ -139,7 +143,7 @@ index 1486cbc..4ddee37 100644
  ]
  
  if host_machine.system() != 'windows'
-@@ -37,10 +48,12 @@ if host_machine.system() != 'windows'
+@@ -37,10 +52,12 @@ if host_machine.system() != 'windows'
  	endforeach
  else
  	pre_args += [
@@ -154,7 +158,7 @@ index 1486cbc..4ddee37 100644
  	]
  endif
  
-@@ -78,9 +91,8 @@ uam_incs = []
+@@ -78,9 +95,8 @@ uam_incs = []
  subdir('source')
  subdir('mesa-imported')
  

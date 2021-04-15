@@ -56,7 +56,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install ninja meson
+          brew install ninja meson bison flex
           python3 -m pip install Mako
 
       - name: Configure CMake
@@ -86,7 +86,7 @@ jobs:
         run: |
           choco install ninja meson winflexbison3
           echo "$env:ProgramFiles\Meson" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python -m pip install Mako
+          python3 -m pip install Mako
 
       - name: Enable Visual Studio environment
         uses: ilammy/msvc-dev-cmd@v1

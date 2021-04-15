@@ -27,7 +27,7 @@ endif()
 ExternalProject_Add(
         DirectXShaderCompiler
         GIT_REPOSITORY https://github.com/microsoft/DirectXShaderCompiler
-        GIT_TAG b3c14b2a7abecf25e3477ae35eb4b2ba5dde1d49
+        GIT_TAG v1.5.2010
         BUILD_COMMAND "${CMAKE_COMMAND}" --build . --target dxcompiler
         INSTALL_COMMAND
         "${CMAKE_COMMAND}" -E make_directory "${CLANG_BINARY_DIR}/include/dxc/"
@@ -39,6 +39,7 @@ ExternalProject_Add(
         COMMAND
         "${CMAKE_COMMAND}" -E copy ../DirectXShaderCompiler/include/dxc/Support/WinAdapter.h
         "${CLANG_BINARY_DIR}/include/dxc/Support/WinAdapter.h"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${lib_destination}"
         ${INTERN_COPY}
         ${LINK_OR_COPY}
         CMAKE_CACHE_ARGS

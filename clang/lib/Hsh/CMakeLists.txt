@@ -46,6 +46,8 @@ ExternalProject_Add(
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
         -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
+        -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
+        -DLLVM_USE_LINKER:STRING=${LLVM_USE_LINKER}
         -DSPIRV_WERROR:STRING=Off
         -DENABLE_SPIRV_CODEGEN:STRING=On
         -DLLVM_TARGETS_TO_BUILD:STRING=None
@@ -91,6 +93,12 @@ if(NOT NINJA)
 endif()
 
 set(MESON_OPTIONS "--prefix=${CLANG_BINARY_DIR}" -Dbuildtype=$<IF:$<CONFIG:Debug>,debug,release>)
+if(APPLE)
+  set(archs ${CMAKE_OSX_ARCHITECTURES})
+  list(TRANSFORM archs PREPEND "-arch ")
+  list(JOIN archs " " archs_join)
+  list(APPEND MESON_OPTIONS "-Dc_args=${archs_join}" "-Dcpp_args=${archs_join}")
+endif()
 
 ExternalProject_Add(
         UAM

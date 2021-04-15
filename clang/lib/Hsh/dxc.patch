@@ -61,6 +61,20 @@ index a48ce07dd..d46963d1e 100644
  
    for (auto *VarInfo : m_LiveVars)
    {
+diff --git a/lib/DxilDia/DxilDiaSymbolManager.cpp b/lib/DxilDia/DxilDiaSymbolManager.cpp
+index 783ecf940..6928ddb4e 100644
+--- a/lib/DxilDia/DxilDiaSymbolManager.cpp
++++ b/lib/DxilDia/DxilDiaSymbolManager.cpp
+@@ -103,7 +103,8 @@ struct DISymbol : public Symbol {
+ 
+ template <typename N>
+ struct TypedSymbol : public DISymbol<N> {
+-  TypedSymbol(IMalloc *M, N Node, DWORD dwTypeID, llvm::DIType *Type) : DISymbol(M, Node), m_dwTypeID(dwTypeID), m_pType(Type) {}
++  TypedSymbol(IMalloc *M, N Node, DWORD dwTypeID, llvm::DIType *Type)
++      : DISymbol<N>(M, Node), m_dwTypeID(dwTypeID), m_pType(Type) {}
+ 
+   STDMETHODIMP get_type(
+     /* [retval][out] */ IDiaSymbol **ppRetVal) override {
 diff --git a/lib/Support/Windows/Program.inc b/lib/Support/Windows/Program.inc
 index 4a3676b12..7e9fa0d0f 100644
 --- a/lib/Support/Windows/Program.inc

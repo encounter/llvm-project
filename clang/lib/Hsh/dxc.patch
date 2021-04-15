@@ -24,6 +24,19 @@ index a6ae74655..d2f3fb48b 100644
    for (auto *Node : m_pStruct->getElements())
    {
      auto* pDIField = llvm::dyn_cast<llvm::DIDerivedType>(Node);
+diff --git a/lib/DxilDia/DxcPixVariables.cpp b/lib/DxilDia/DxcPixVariables.cpp
+index a48ce07dd..d46963d1e 100644
+--- a/lib/DxilDia/DxcPixVariables.cpp
++++ b/lib/DxilDia/DxcPixVariables.cpp
+@@ -208,7 +208,7 @@ STDMETHODIMP dxil_debug_info::DxcPixDxilLiveVariables::GetVariableByName(
+     _In_ LPCWSTR Name,
+     _Outptr_result_z_ IDxcPixVariable **ppVariable)
+ {
+-  std::string name = CW2A(Name);
++  LPSTR name = CW2A(Name);
+ 
+   for (auto *VarInfo : m_LiveVars)
+   {
 diff --git a/lib/Support/Windows/Program.inc b/lib/Support/Windows/Program.inc
 index 4a3676b12..7e9fa0d0f 100644
 --- a/lib/Support/Windows/Program.inc

@@ -130,18 +130,25 @@ endian = 'little' # fixme?
 ")
   list(APPEND MESON_OPTIONS "--cross-file=${CMAKE_BINARY_DIR}/uam-cross")
 else()
+  set(link "${LLVM_USE_LINKER}")
   if(NOT APPLE)
     # this causes meson to forego all necessary macOS args
     set(COMPILERS "c = '${CMAKE_C_COMPILER}'
 cpp = '${CMAKE_CXX_COMPILER}'")
   endif()
-  file(WRITE "${CMAKE_BINARY_DIR}/uam-native" "[binaries]
-${COMPILERS}
+  if(WIN32 AND "${link}" STREQUAL "lld")
+    set(link "lld-link")
+  endif()
+  if(NOT WIN32)
+    set(COMPILERS "${COMPILERS}
 ar = '${CMAKE_AR}'
 strip = '${CMAKE_STRIP}'
-pkgconfig = '${PKG_CONFIG_EXECUTABLE}'
-c_ld = '${LLVM_USE_LINKER}'
-cpp_ld = '${LLVM_USE_LINKER}'
+pkgconfig = '${PKG_CONFIG_EXECUTABLE}'")
+  endif()
+  file(WRITE "${CMAKE_BINARY_DIR}/uam-native" "[binaries]
+${COMPILERS}
+c_ld = '${link}'
+cpp_ld = '${link}'
 ")
   list(APPEND MESON_OPTIONS "--native-file=${CMAKE_BINARY_DIR}/uam-native")
 endif()

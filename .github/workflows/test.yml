@@ -88,9 +88,11 @@ jobs:
       matrix:
         include:
           - name: MSVC
+            oname: msvc
             cc: cl
             ld: '' # implicitly link.exe
           - name: Clang
+            oname: clang
             cc: clang-cl
             ld: lld
 
@@ -122,5 +124,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: hsh-macos-appleclang-x86_64
+          name: hsh-win32-${{matrix.oname}}-x86_64
           path: uam.7z

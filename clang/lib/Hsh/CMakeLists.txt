@@ -131,10 +131,13 @@ endian = 'little' # fixme?
   list(APPEND MESON_OPTIONS "--cross-file=${CMAKE_BINARY_DIR}/uam-cross")
 else()
   set(link "${LLVM_USE_LINKER}")
-  if(NOT APPLE)
-    # this causes meson to forego all necessary macOS args
-    set(COMPILERS "c = '${CMAKE_C_COMPILER}'
-cpp = '${CMAKE_CXX_COMPILER}'")
+  if(WIN32 OR APPLE)
+    # meson misidentifies cl.exe and XCode cc when given a full path (sigh)
+    # we'll just assume they're on $PATH
+    get_filename_component(c_compiler "${CMAKE_C_COMPILER}" NAME)
+    get_filename_component(cpp_compiler "${CMAKE_CXX_COMPILER}" NAME)
+    set(COMPILERS "c = '${c_compiler}'
+cpp = '${cpp_compiler}'")
   endif()
   if(WIN32 AND "${link}" STREQUAL "lld")
     set(link "lld-link")

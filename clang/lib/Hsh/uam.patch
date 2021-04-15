@@ -99,6 +99,49 @@ index d6d5da7..7a5be48 100644
  
  
  #define delete_Instruction(p, insn) (p)->releaseInstruction(insn)
+diff --git a/mesa-imported/tgsi/tgsi_ureg.c b/mesa-imported/tgsi/tgsi_ureg.c
+index c1c8851..65a1f37 100644
+--- a/mesa-imported/tgsi/tgsi_ureg.c
++++ b/mesa-imported/tgsi/tgsi_ureg.c
+@@ -476,13 +476,13 @@ out:
+ 
+ struct ureg_dst
+ ureg_DECL_output_masked(struct ureg_program *ureg,
+-                        unsigned name,
+-                        unsigned index,
++                        enum tgsi_semantic semantic_name,
++                        unsigned semantic_index,
+                         unsigned usage_mask,
+                         unsigned array_id,
+                         unsigned array_size)
+ {
+-   return ureg_DECL_output_layout(ureg, name, index, 0,
++   return ureg_DECL_output_layout(ureg, semantic_name, semantic_index, 0,
+                                   ureg->nr_output_regs, usage_mask, array_id,
+                                   array_size, FALSE);
+ }
+diff --git a/mesa-imported/tgsi/tgsi_ureg.h b/mesa-imported/tgsi/tgsi_ureg.h
+index f23e3fa..67835e4 100644
+--- a/mesa-imported/tgsi/tgsi_ureg.h
++++ b/mesa-imported/tgsi/tgsi_ureg.h
+@@ -256,7 +256,7 @@ ureg_DECL_output_layout(struct ureg_program *,
+                         boolean invariant);
+ 
+ struct ureg_dst
+-ureg_DECL_output_masked(struct ureg_program *,
++ureg_DECL_output_masked(struct ureg_program *ureg,
+                         enum tgsi_semantic semantic_name,
+                         unsigned semantic_index,
+                         unsigned usage_mask,
+@@ -264,7 +264,7 @@ ureg_DECL_output_masked(struct ureg_program *,
+                         unsigned array_size);
+ 
+ struct ureg_dst
+-ureg_DECL_output(struct ureg_program *,
++ureg_DECL_output(struct ureg_program *ureg,
+                  enum tgsi_semantic semantic_name,
+                  unsigned semantic_index);
+ 
 diff --git a/meson.build b/meson.build
 index 1486cbc..06bdc3b 100644
 --- a/meson.build

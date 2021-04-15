@@ -93,19 +93,22 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
+        continue-on-error: true
         run: cmake --build build --config RelWithDebInfo --target UAM DirectXShaderCompiler
 
-      - name: Generate .dSYMs
-        run: dsymutil install/bin/*
-
-      - name: Create tarball
-        run: tar -C install -cavf uam.tar.gz -s '/.//' .
+#      - name: Generate .dSYMs
+#        run: dsymutil install/bin/*
+#
+#      - name: Create tarball
+#        run: tar -C install -cavf uam.tar.gz -s '/.//' .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: hsh-macos-appleclang-universal
-          path: uam.tar.gz
+          path: |
+            uam.tar.gz
+            build/tools/clang/lib/Hsh/UAM-prefix/src/UAM-build/meson-logs/meson-log.txt
 
   build-windows:
     name: Build Windows (${{matrix.name}} x86_64)

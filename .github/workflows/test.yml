@@ -77,8 +77,19 @@ jobs:
           path: uam.tar.gz
 
   build-windows-msvc:
-    name: Build Windows (MSVC x86_64)
+    name: Build Windows (${{matrix.name}} x86_64)
     runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MSVC
+            cc: cl
+            ld: '' # implicitly link.exe
+          - name: Clang
+            cc: clang-cl
+            ld: lld
+
     steps:
       - uses: actions/checkout@v2
 
@@ -94,7 +105,9 @@ jobs:
       - name: Configure CMake
         run: |
           cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo `
-            -DCMAKE_INSTALL_PREFIX:PATH="$env:GITHUB_WORKSPACE\install"
+            -DCMAKE_INSTALL_PREFIX:PATH="$env:GITHUB_WORKSPACE\install" `
+            -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cc}} `
+            -DLLVM_USE_LINKER=${{matrix.ld}}
 
       - name: Build
         run: cmake --build build --config RelWithDebInfo --target install-distribution

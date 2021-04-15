@@ -1,0 +1,14 @@
+diff --git a/lib/Support/Windows/Program.inc b/lib/Support/Windows/Program.inc
+index 4a3676b12..7e9fa0d0f 100644
+--- a/lib/Support/Windows/Program.inc
++++ b/lib/Support/Windows/Program.inc
+@@ -97,7 +97,8 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
+ 
+   return std::string(U8Result.begin(), U8Result.end());
+ #else
+-  return "";
++  using namespace std::string_literals;
++  return ""s;
+ #endif
+ }
+ 

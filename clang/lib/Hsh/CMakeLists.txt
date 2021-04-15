@@ -28,6 +28,8 @@ ExternalProject_Add(
         DirectXShaderCompiler
         GIT_REPOSITORY https://github.com/microsoft/DirectXShaderCompiler
         GIT_TAG v1.5.2010
+        PATCH_COMMAND "${GIT_EXECUTABLE}" reset --hard HEAD
+        COMMAND "${GIT_EXECUTABLE}" apply "${CMAKE_CURRENT_SOURCE_DIR}/dxc.patch"
         BUILD_COMMAND "${CMAKE_COMMAND}" --build . --target dxcompiler
         INSTALL_COMMAND
         "${CMAKE_COMMAND}" -E make_directory "${CLANG_BINARY_DIR}/include/dxc/"
@@ -44,14 +46,19 @@ ExternalProject_Add(
         ${LINK_OR_COPY}
         CMAKE_CACHE_ARGS
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+        -DCMAKE_SYSTEM_NAME:STRING=${CMAKE_SYSTEM_NAME}
+        -DCMAKE_SYSTEM_PROCESSOR:STRING=${CMAKE_SYSTEM_PROCESSOR}
+        -DCMAKE_CROSSCOMPILING:STRING=${CMAKE_CROSSCOMPILING}
         -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
+        -DCMAKE_AR:STRING=${CMAKE_AR}
+        -DCMAKE_STRIP:STRING=${CMAKE_STRIP}
+        -DPKG_CONFIG_EXECUTABLE:STRING=${PKG_CONFIG_EXECUTABLE}
         -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
         -DLLVM_USE_LINKER:STRING=${LLVM_USE_LINKER}
         -DSPIRV_WERROR:STRING=Off
         -DENABLE_SPIRV_CODEGEN:STRING=On
         -DLLVM_TARGETS_TO_BUILD:STRING=None
-        -DDXC_BUILD_ARCH:STRING=x64
         -DCLANG_ENABLE_ARCMT:STRING=Off
         -DCLANG_ENABLE_STATIC_ANALYZER:STRING=Off
         -DCLANG_INCLUDE_TESTS:STRING=Off
@@ -100,6 +107,28 @@ if(APPLE)
   list(APPEND MESON_OPTIONS "-Dc_args=${archs_join}" "-Dcpp_args=${archs_join}")
 endif()
 
+if(CMAKE_CROSSCOMPILING)
+  string(REPLACE "-" ";" target_list ${LLVM_DEFAULT_TARGET_TRIPLE})
+  list(GET target_list 0 arch)
+  list(GET target_list 1 system)
+  file(WRITE "${CMAKE_BINARY_DIR}/uam-cross" "[binaries]
+c = '${CMAKE_C_COMPILER}'
+cpp = '${CMAKE_CXX_COMPILER}'
+ar = '${CMAKE_AR}'
+strip = '${CMAKE_STRIP}'
+pkgconfig = '${PKG_CONFIG_EXECUTABLE}'
+c_ld = '${LLVM_USE_LINKER}'
+cpp_ld = '${LLVM_USE_LINKER}'
+
+[host_machine]
+system = '${system}'
+cpu = '${arch}'
+cpu_family = '${arch}'
+endian = 'little'
+")
+  list(APPEND MESON_OPTIONS "--cross-file=${CMAKE_BINARY_DIR}/uam-cross")
+endif()
+
 ExternalProject_Add(
         UAM
         GIT_REPOSITORY https://github.com/devkitPro/uam.git
@@ -107,7 +136,6 @@ ExternalProject_Add(
         PATCH_COMMAND "${GIT_EXECUTABLE}" reset --hard HEAD
         COMMAND "${GIT_EXECUTABLE}" apply "${CMAKE_CURRENT_SOURCE_DIR}/uam.patch"
         CONFIGURE_COMMAND "${MESON}" "<SOURCE_DIR>" ${MESON_OPTIONS}
-        COMMAND "${MESON}" configure ${MESON_OPTIONS}
         BUILD_COMMAND "${NINJA}"
         INSTALL_COMMAND "")
 

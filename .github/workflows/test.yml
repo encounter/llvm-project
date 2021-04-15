@@ -26,13 +26,33 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install curl git cmake ninja-build meson clang lld python3 python3-mako python-is-python3
+          sudo apt-get -y install curl git cmake ninja-build meson clang lld \
+            python3 python3-mako python-is-python3 ccache
+
+          # free up disk space
+          # https://github.com/actions/virtual-environments/issues/2840#issuecomment-790492173
+          echo Before
+          df -h .
+          sudo apt-get clean
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo After
+          df -h .
+
+      - name: Configure ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ubuntu-20.04-${{matrix.cc}}
+          max-size: 1G
 
       - name: Configure CMake
         run: |
           cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install" \
             -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DLLVM_USE_LINKER=${{matrix.ld}}
 
       - name: Build
@@ -56,14 +76,21 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install ninja meson bison flex
+          brew install ninja meson bison flex ccache
           python3 -m pip install Mako
+
+      - name: Configure ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: macos-10.15-appleclang
+          max-size: 1G
 
       - name: Configure CMake
         run: |
           cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_INSTALL_PREFIX="$GITHUB_WORKSPACE/install" \
-            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
         run: cmake --build build --config RelWithDebInfo --target install-distribution
@@ -80,7 +107,7 @@ jobs:
           name: hsh-macos-appleclang-universal
           path: uam.tar.gz
 
-  build-windows-msvc:
+  build-windows:
     name: Build Windows (${{matrix.name}} x86_64)
     runs-on: windows-2019
     strategy:

@@ -50,7 +50,9 @@ ExternalProject_Add(
         -DCMAKE_SYSTEM_PROCESSOR:STRING=${CMAKE_SYSTEM_PROCESSOR}
         -DCMAKE_CROSSCOMPILING:STRING=${CMAKE_CROSSCOMPILING}
         -DCMAKE_C_COMPILER:STRING=${CMAKE_C_COMPILER}
+        -DCMAKE_C_COMPILER_LAUNCHER:STRING=${CMAKE_C_COMPILER_LAUNCHER}
         -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
+        -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=${CMAKE_CXX_COMPILER_LAUNCHER}
         -DCMAKE_AR:STRING=${CMAKE_AR}
         -DCMAKE_STRIP:STRING=${CMAKE_STRIP}
         -DPKG_CONFIG_EXECUTABLE:STRING=${PKG_CONFIG_EXECUTABLE}
@@ -124,9 +126,24 @@ cpp_ld = '${LLVM_USE_LINKER}'
 system = '${system}'
 cpu = '${arch}'
 cpu_family = '${arch}'
-endian = 'little'
+endian = 'little' # fixme?
 ")
   list(APPEND MESON_OPTIONS "--cross-file=${CMAKE_BINARY_DIR}/uam-cross")
+else()
+  if(NOT APPLE)
+    # this causes meson to forego all necessary macOS args
+    set(COMPILERS "c = '${CMAKE_C_COMPILER}'
+cpp = '${CMAKE_CXX_COMPILER}'")
+  endif()
+  file(WRITE "${CMAKE_BINARY_DIR}/uam-native" "[binaries]
+${COMPILERS}
+ar = '${CMAKE_AR}'
+strip = '${CMAKE_STRIP}'
+pkgconfig = '${PKG_CONFIG_EXECUTABLE}'
+c_ld = '${LLVM_USE_LINKER}'
+cpp_ld = '${LLVM_USE_LINKER}'
+")
+  list(APPEND MESON_OPTIONS "--native-file=${CMAKE_BINARY_DIR}/uam-native")
 endif()
 
 ExternalProject_Add(

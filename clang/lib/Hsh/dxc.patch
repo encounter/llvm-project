@@ -1,3 +1,16 @@
+diff --git a/lib/DxcSupport/dxcapi.use.cpp b/lib/DxcSupport/dxcapi.use.cpp
+index 62485d3c4..2c0b1c819 100644
+--- a/lib/DxcSupport/dxcapi.use.cpp
++++ b/lib/DxcSupport/dxcapi.use.cpp
+@@ -33,7 +33,7 @@ static std::string GetWin32ErrorMessage(DWORD err) {
+   DWORD formattedMsgLen =
+       FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                     nullptr, err, 0, formattedMsg, _countof(formattedMsg), 0);
+-  if (formattedMsg > 0 && formattedMsgLen < _countof(formattedMsg)) {
++  if (formattedMsg[0] != 0 && formattedMsgLen < _countof(formattedMsg)) {
+     TrimEOL(formattedMsg);
+     return std::string(formattedMsg);
+   }
 diff --git a/lib/Support/Windows/Program.inc b/lib/Support/Windows/Program.inc
 index 4a3676b12..7e9fa0d0f 100644
 --- a/lib/Support/Windows/Program.inc

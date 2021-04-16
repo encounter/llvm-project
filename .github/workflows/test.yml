@@ -59,13 +59,13 @@ jobs:
         run: cmake --build build --config RelWithDebInfo --target install-distribution
 
       - name: Create tarball
-        run: tar -C install -cavf uam.tar.gz --xform 's:^\./::' .
+        run: tar -C install -cavf hsh-linux-${{matrix.cc}}-x86_64.tar.gz --xform 's:^\./::' .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: hsh-linux-${{matrix.cc}}-x86_64
-          path: uam.tar.gz
+          path: hsh-linux-${{matrix.cc}}-x86_64.tar.gz
 
   build-macos:
     name: Build macOS (AppleClang universal)
@@ -100,17 +100,19 @@ jobs:
         run: dsymutil install/bin/*
 
       - name: Create tarball
-        run: tar -C install -cavf uam.tar.gz -s '/.//' .
+        run: tar -C install -cavf hsh-macos-appleclang-universal.tar.gz -s '/.//' .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: hsh-macos-appleclang-universal
-          path: uam.tar.gz
+          path: hsh-macos-appleclang-universal.tar.gz
 
   build-windows:
     name: Build Windows (${{matrix.name}} x86_64)
     runs-on: windows-2019
+    env:
+      BUILDCACHE_VERSION: v0.26.1
     strategy:
       fail-fast: false
       matrix:
@@ -133,24 +135,76 @@ jobs:
           echo "$env:ProgramFiles\Meson" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           python3 -m pip install Mako
 
+          # set up buildcache
+          $TempDir = "$env:RUNNER_WORKSPACE\temp"
+          New-Item -Path "$TempDir" -ItemType Directory -ea 0
+          (New-Object Net.WebClient).DownloadFile("https://github.com/mbitsnbites/buildcache/releases/download/$env:BUILDCACHE_VERSION/buildcache-windows.zip", "$TempDir\buildcache.zip")
+          Expand-Archive -LiteralPath "$TempDir\buildcache.zip" -DestinationPath "$TempDir"
+          echo "$TempDir\buildcache\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "BUILDCACHE_ACCURACY=STRICT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "BUILDCACHE_DIR=$env:GITHUB_WORKSPACE\.buildcache" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "BUILDCACHE_MAX_CACHE_SIZE=1073741824" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Restore buildcache
+        uses: actions/cache@v2
+        with:
+          path: ${{github.workspace}}/.buildcache
+          key: buildcache-win32-${{matrix.oname}}
+
       - name: Enable Visual Studio environment
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
         run: |
+          buildcache -z
           cmake -B build llvm -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo `
             -DCMAKE_INSTALL_PREFIX:PATH="$env:GITHUB_WORKSPACE\install" `
             -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cc}} `
+            -DCMAKE_C_COMPILER_LAUNCHER=buildcache -DCMAKE_CXX_COMPILER_LAUNCHER=buildcache `
+            -DCMAKE_C_FLAGS_RELWITHDEBINFO:STRING="/MD /Z7 /O2 /Ob1 /DNDEBUG" `
+            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING="/MD /Z7 /O2 /Ob1 /DNDEBUG" `
             -DLLVM_USE_LINKER=${{matrix.ld}}
 
       - name: Build
         run: cmake --build build --config RelWithDebInfo --target install-distribution
 
+      - name: Print buildcache stats
+        run: buildcache -s
+
       - name: Create 7z
-        run: 7z a -t7z uam.7z .\install\*
+        run: 7z a -t7z hsh-win32-${{matrix.oname}}-x86_64.7z .\install\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: hsh-win32-${{matrix.oname}}-x86_64
-          path: uam.7z
+          path: hsh-win32-${{matrix.oname}}-x86_64.7z
+
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    if:
+      contains('
+        refs/heads/master
+        refs/heads/ci
+      ', github.ref)
+    needs:
+      - build-linux
+      - build-macos
+      - build-windows
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{github.token}}
+          automatic_release_tag: latest
+          prerelease: true
+          title: Continuous build
+          files: |
+            artifacts/*/*

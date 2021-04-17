@@ -30,9 +30,17 @@ set(config_install_dir "lib/cmake/hsh")
 
 # Export binary targets for client usage
 install(TARGETS hshgen llvm-objcopy EXPORT hshTargets COMPONENT hsh-binaries)
-if(WIN32)
+if(MSVC)
   install(FILES $<TARGET_PDB_FILE:hshgen> $<TARGET_PDB_FILE:llvm-objcopy>
       CONFIGURATIONS Debug RelWithDebInfo DESTINATION bin
+      COMPONENT hsh-binaries)
+endif()
+
+add_custom_target(hsh-binaries)
+set_target_properties(hsh-binaries PROPERTIES FOLDER "Hsh executables")
+if(NOT LLVM_ENABLE_IDE)
+  add_llvm_install_targets(install-hsh-binaries
+      DEPENDS hsh-binaries
       COMPONENT hsh-binaries)
 endif()
 

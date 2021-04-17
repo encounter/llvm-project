@@ -31,7 +31,9 @@ set(config_install_dir "lib/cmake/hsh")
 # Export binary targets for client usage
 install(TARGETS hshgen llvm-objcopy EXPORT hshTargets)
 if(WIN32)
-  install(FILES $<TARGET_PDB_FILE:hshgen> $<TARGET_PDB_FILE:llvm-objcopy> DESTINATION bin)
+  install(FILES $<TARGET_PDB_FILE:hshgen> $<TARGET_PDB_FILE:llvm-objcopy>
+      CONFIGURATIONS Debug RelWithDebInfo DESTINATION bin
+      COMPONENT libhsh-headers)
 endif()
 
 # Install the target config files

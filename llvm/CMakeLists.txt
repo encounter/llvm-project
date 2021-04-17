@@ -10,12 +10,11 @@ set(LLVM_EXTERNAL_PROJECTS libhsh CACHE STRING "")
 set(LLVM_ENABLE_PROJECTS "clang;lld;libhsh" CACHE STRING "")
 set(LLVM_TARGETS_TO_BUILD "" CACHE STRING "")
 set(LLVM_DISTRIBUTION_COMPONENTS
-        hshgen
+        hsh-binaries
         clang-resource-headers
         DirectXShaderCompiler-libs
         libhsh-headers
         libhsh-cmake-exports
-        llvm-objcopy
         CACHE STRING "")
 
 if ("${CMAKE_VERSION}" VERSION_LESS "3.13.4")
